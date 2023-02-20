@@ -104,7 +104,7 @@ contract Staker {
   // Add the `receive()` special function that receives eth and calls stake()
   receive() external payable deadlineHasNotPassed {
     // When someone send eth directly to the contract, call the stake function on his behalf
-    (bool sent, ) = msg.sender.call{value: msg.value}(abi.encodeWithSignature("stake()"));
+    (bool sent, ) = address(this).call{value: msg.value}(abi.encodeWithSignature("stake()"));
     require(sent, "Transaction failed");
   }
 
