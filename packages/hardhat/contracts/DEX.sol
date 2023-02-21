@@ -4,11 +4,11 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "hardhat/console.sol";
 
 /**
  * @title DEX Template
- * @author stevepham.eth and m00npapi.eth
- * @notice Empty DEX.sol that just outlines what features could be part of the challenge (up to you!)
+ * @author @etikshajain
  * @dev We want to create an automatic market where our contract will hold reserves of both ETH and 🎈 Balloons. These reserves will provide liquidity that allows anyone to swap between the assets.
  * NOTE: functions outlined here are what work with the front end of this branch/repo. Also return variable names that may need to be specified exactly may be referenced (if you are confused, see solutions folder in this repo and/or cross reference with front-end code).
  */
@@ -17,6 +17,8 @@ contract DEX {
 
     using SafeMath for uint256; //outlines use of SafeMath for uint256 variables
     IERC20 token; //instantiates the imported contract
+    uint256 public totalLiquidity;
+    mapping (address => uint256) public liquidity;
 
     /* ========== EVENTS ========== */
 
@@ -43,7 +45,8 @@ contract DEX {
     /* ========== CONSTRUCTOR ========== */
 
     constructor(address token_addr) public {
-        token = IERC20(token_addr); //specifies the token address that will hook into the interface and be used through the variable 'token'
+        token = IERC20(token_addr); 
+        //specifies the balloon token address that will hook into the interface and be used through the variable 'token'
     }
 
     /* ========== MUTATIVE FUNCTIONS ========== */
@@ -54,7 +57,26 @@ contract DEX {
      * @return totalLiquidity is the number of LPTs minting as a result of deposits made to DEX contract
      * NOTE: since ratio is 1:1, this is fine to initialize the totalLiquidity (wrt to balloons) as equal to eth balance of contract.
      */
-    function init(uint256 tokens) public payable returns (uint256) {}
+    function init(uint256 tokens) public payable returns (uint256) {
+        // check that the dex already does not have liquidity
+        require(totalLiquidity == 0, "Dex: init - already has liquidity");
+
+        // init is 'payable', therefore receives ether = address(this).balance
+
+        // update liquidity of ether
+        totalLiquidity = address(this).balance;
+        liquidity[msg.sender] = totalLiquidity;
+
+        // 1. while deploying, dex.address was approved to transfer 100 balloons of balloon's deployer
+        // 2. therefore, dex.address can transfer 100 balloons from balloon's deployer to any address
+        // dex.address transfers tokens number of balloons from msg.sender(deployer) to dex.address
+        bool sent = token.transferFrom(msg.sender, address(this), tokens);
+        require(sent, "Dex init: Tokens did not transact!");
+        console.log("dex init balloons after init: ", token.balanceOf(address(this)));
+        console.log("dex init balloons after init: ", address(this).balance);
+
+        return totalLiquidity;
+    }
 
     /**
      * @notice returns yOutput, or yDelta for xInput (or xDelta)
