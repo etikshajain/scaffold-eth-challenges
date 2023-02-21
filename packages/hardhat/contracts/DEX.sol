@@ -25,12 +25,12 @@ contract DEX {
     /**
      * @notice Emitted when ethToToken() swap transacted
      */
-    event EthToTokenSwap();
+    event EthToTokenSwap(address swapper, string txDetails, uint256 ethInput, uint256 tokenOutput);
 
     /**
      * @notice Emitted when tokenToEth() swap transacted
      */
-    event TokenToEthSwap();
+    event TokenToEthSwap(address swapper, string txDetails, uint256 tokensInput, uint256 ethOutput);
 
     /**
      * @notice Emitted when liquidity provided to DEX and mints LPTs.
@@ -86,7 +86,7 @@ contract DEX {
         uint256 xInput,
         uint256 xReserves,
         uint256 yReserves
-    ) public view returns (uint256 yOutput) {
+    ) public pure returns (uint256 yOutput) {
         // 0.3% fees
         // x_res*y_res = (x_res + x_in*0.997)*y_new  ==> y_out = y_res - y_new
         uint256 xInputWithFee = xInput.mul(997);
@@ -105,12 +105,46 @@ contract DEX {
     /**
      * @notice sends Ether to DEX in exchange for $BAL
      */
-    function ethToToken() public payable returns (uint256 tokenOutput) {}
+    function ethToToken() public payable returns (uint256 tokenOutput) {
+        require(msg.value > 0, "please send non zero Eth!");
+        uint256 ethReserves = address(this).balance.sub(msg.value);
+        uint256 tokenReserves = token.balanceOf(address(this));
+        uint256 ethInput = msg.value;
+        tokenOutput = price(ethInput, ethReserves, tokenReserves);
+
+        // Transfer tokenOutput number of balloons from dex.address to msg.sender
+        bool sent = token.transfer(msg.sender, tokenOutput);
+        require(sent, "ethToToken(): Swap failed!");
+
+        // emit event
+        emit EthToTokenSwap(msg.sender, "Eth to Balloons", msg.value, tokenOutput);
+
+        return tokenOutput;
+    }
 
     /**
      * @notice sends $BAL tokens to DEX in exchange for Ether
      */
-    function tokenToEth(uint256 tokenInput) public returns (uint256 ethOutput) {}
+    function tokenToEth(uint256 tokenInput) public returns (uint256 ethOutput) {
+        require(tokenInput > 0, "please send non zero tokens!");
+        uint256 ethReserves = address(this).balance;
+        uint256 tokenReserves = token.balanceOf(address(this));
+
+        ethOutput = price(tokenInput, tokenReserves, ethReserves);
+
+        // Transfer tokenInput number of balloons from msg.sender to dex.address
+        bool sent_token = token.transferFrom(msg.sender, address(this), tokenInput);
+        require(sent_token, "tokenToEth(): Swap failed!");
+
+        // Transfer ethOutput number of eth from dex.address to msg.sender
+        (bool sent_eth,) = msg.sender.call{value: ethOutput}("");
+        require(sent_eth, "tokenToEth(): Swap failed!");
+
+        // emit event
+        emit TokenToEthSwap(msg.sender, "Balloons to ETH", tokenInput, ethOutput);
+
+        return ethOutput;
+    }
 
     /**
      * @notice allows deposits of $BAL and $ETH to liquidity pool
