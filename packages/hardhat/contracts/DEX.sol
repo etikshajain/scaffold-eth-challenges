@@ -132,6 +132,9 @@ contract DEX {
 
         ethOutput = price(tokenInput, tokenReserves, ethReserves);
 
+        // Make sure the sender has given the required approval for tokens
+        require(token.allowance(msg.sender, address(this))>=tokenInput, "Please approve the tokens for swap!");
+
         // Transfer tokenInput number of balloons from msg.sender to dex.address
         bool sent_token = token.transferFrom(msg.sender, address(this), tokenInput);
         require(sent_token, "tokenToEth(): Swap failed!");
@@ -152,7 +155,9 @@ contract DEX {
      * NOTE: user has to make sure to give DEX approval to spend their tokens on their behalf by calling approve function prior to this function call.
      * NOTE: Equal parts of both assets will be removed from the user's wallet with respect to the price outlined by the AMM.
      */
-    function deposit() public payable returns (uint256 tokensDeposited) {}
+    function deposit() public payable returns (uint256 tokensDeposited) {
+        require(msg.value>0, "Please send non zero eth!");
+    }
 
     /**
      * @notice allows withdrawal of $BAL and $ETH from liquidity pool
