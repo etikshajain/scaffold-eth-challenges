@@ -14,14 +14,12 @@ contract Streamer is Ownable {
     mapping(address => uint256) canCloseAt;
 
     function fundChannel() public payable {
-        /*
-        Checkpoint 3: fund a channel
-
-        complete this function so that it:
-        - reverts if msg.sender already has a running channel (ie, if balances[msg.sender] != 0)
-        - updates the balances mapping with the eth received in the function call
-        - emits an Opened event
-        */
+        // reverts if msg.sender already has a running channel (ie, if balances[msg.sender] != 0)
+        require(balances[msg.sender] == 0, "You already have a running channel.");
+        // updates the balances mapping with the eth received in the function call
+        balances[msg.sender] = msg.value;
+        // emits an Opened event
+        emit Opened(msg.sender, msg.value);
     }
 
     function timeLeft(address channel) public view returns (uint256) {
