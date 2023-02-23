@@ -340,7 +340,7 @@ function App(props) {
    * If autoPay is turned on, instantly recalculate due payment
    * and return to the service provider.
    *
-   * @param {MessageEvent<string>} e
+   * @param {MessageEvent<string>}
    */
   channel.onmessage = e => {
     if (typeof e.data != "string") {
@@ -478,7 +478,7 @@ function App(props) {
       const packed = ethers.utils.solidityPack(["uint256"], [updatedBalance]);
       const hashed = ethers.utils.keccak256(packed);
       const arrayified = ethers.utils.arrayify(hashed);
-      const signature = vouchers()[clientAddress].signature;
+      const signature = voucher.data.signature;
 
       if(clientAddress !== ethers.utils.verifyMessage(arrayified, signature)){
         console.log("Message not verified!");
@@ -538,6 +538,7 @@ function App(props) {
    */
   function provideService(clientAddress) {
     const channelInput = document.getElementById("input-" + clientAddress);
+    logVouchers()
     if (channelInput) {
       const wisdom = channelInput.value;
       console.log("sending: %s", wisdom);
