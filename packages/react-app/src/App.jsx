@@ -475,6 +475,15 @@ function App(props) {
        *  and then use ethers.utils.verifyMessage() to confirm that voucher signer was
        *  `clientAddress`. (If it wasn't, log some error message and return).
       */
+      const packed = ethers.utils.solidityPack(["uint256"], [updatedBalance]);
+      const hashed = ethers.utils.keccak256(packed);
+      const arrayified = ethers.utils.arrayify(hashed);
+      const signature = vouchers()[clientAddress].signature;
+
+      if(clientAddress !== ethers.utils.verifyMessage(arrayified, signature)){
+        console.log("Message not verified!");
+        return;
+      }
 
       const existingVoucher = vouchers()[clientAddress];
 
@@ -531,7 +540,7 @@ function App(props) {
     const channelInput = document.getElementById("input-" + clientAddress);
     if (channelInput) {
       const wisdom = channelInput.value;
-      // console.log("sending: %s", wisdom);
+      console.log("sending: %s", wisdom);
       channels[clientAddress].postMessage(wisdom);
       document.getElementById(`provided-${clientAddress}`).innerText = wisdom.length;
     } else {
