@@ -44,7 +44,7 @@ contract DEX {
         address liquidityRemover,
         uint256 tokensOutput,
         uint256 ethOutput,
-        uint256 indexed liquidityWithdrawn
+        uint256 liquidityWithdrawn
     );
 
     /* ========== CONSTRUCTOR ========== */
@@ -106,7 +106,7 @@ contract DEX {
      *
      */
     function getLiquidity(address lp) public view returns (uint256) {
-        return liquidity[lp];
+        return[lp];
     }
 
     /**
@@ -209,10 +209,10 @@ contract DEX {
 
         // LPTs
         liquidity[msg.sender] = liquidity[msg.sender].sub(amount);
-        totalLiquidity = totalLiquidity.sub(amount);
+        totalLiquidity =totalLiquidity.sub(amount);
 
         // Transfer eth
-        bool sent_eth = token.transfer(msg.sender, token_amount);
+        bool sent_eth = token.transferFrom(address(this), msg.sender, token_amount);
         require(sent_eth, "Token txn failed!");
 
         // Transfer tokens
@@ -220,7 +220,7 @@ contract DEX {
         require(sent_token, "Eth txn failed");
 
         //emit event
-        emit LiquidityRemoved(msg.sender, token_amount, eth_amount, amount);
+        emit LiquidityRemoved(msg.sender, amount, eth_amount, token_amount);
 
         return (eth_amount, token_amount);
     }

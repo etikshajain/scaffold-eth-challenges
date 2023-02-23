@@ -304,8 +304,8 @@ describe("Challenge 4: ⚖️ DEX Challenge 🚩", function () {
         const userBallonsBalanceAfter = await balloonsContract.balanceOf(deployer.address);
         const tx1_receipt = await tx1.wait();
 
-        const eth_out = getEventValue(tx1_receipt, 3);
-        const token_out = getEventValue(tx1_receipt, 2);
+        const eth_out = getEventValue(tx1_receipt, 2);
+        const token_out = getEventValue(tx1_receipt, 3);
 
         console.log('\t', " 💵 User's new $BAL balance:", formatEther(userBallonsBalanceAfter));
         console.log('\t', " 🎈 Expecting the balance to have increased by 1", formatEther(userBallonsBalanceAfter));
@@ -331,7 +331,7 @@ describe("Challenge 4: ⚖️ DEX Challenge 🚩", function () {
         const totalLpAfter = await dexContract.totalLiquidity();
         console.log('\t', " ⚖️ Final liquidity:", formatEther(totalLpAfter));
         const txWithdraw_receipt = await txWithdraw.wait();
-        const liquidityBurned = getEventValue(txWithdraw_receipt, 3);
+        const liquidityBurned = getEventValue(txWithdraw_receipt, 2);
         console.log('\t', " 🔼 Emitted liquidity removed:", formatEther(liquidityBurned));
 
         expect(totalLpAfter, "Emitted incorrect liquidity amount burned").to.be.equal(totalLpBefore.sub(liquidityBurned));
