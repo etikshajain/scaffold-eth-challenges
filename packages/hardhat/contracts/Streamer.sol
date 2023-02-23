@@ -23,9 +23,9 @@ contract Streamer is Ownable {
     }
 
     function timeLeft(address channel) public view returns (uint256) {
-        // require(canCloseAt[channel] != 0, "channel is not closing");
-        // return canCloseAt[channel] - block.timestamp;
-        return 0;
+        require(canCloseAt[channel] != 0, "channel is not closing");
+        return canCloseAt[channel] - block.timestamp;
+        // return 0;
     }
 
     function withdrawEarnings(Voucher calldata voucher) public onlyOwner {
@@ -73,24 +73,33 @@ contract Streamer is Ownable {
         emit Withdrawn(signer, payout);
     }
 
-    /*
-    Checkpoint 6a: Challenge the channel
+    // Checkpoint 6a: Challenge the channel
 
-    create a public challengeChannel() function that:
-    - checks that msg.sender has an open channel
-    - updates canCloseAt[msg.sender] to some future time
-    - emits a Challenged event
-    */
+    // create a public challengeChannel() function that:
+    function challengeChannel() public {
+    // - checks that msg.sender has an open channel
+    require(balances[msg.sender] != 0, "Sorry, you don not have any open channels.");
+    // - updates canCloseAt[msg.sender] to some future time
+    canCloseAt[msg.sender] = block.timestamp + 30 seconds;
+    // - emits a Challenged event
+    emit Challenged(msg.sender);
+    }
 
-    /*
-    Checkpoint 6b: Close the channel
+    // Checkpoint 6b: Close the channel
 
-    create a public defundChannel() function that:
-    - checks that msg.sender has a closing channel
-    - checks that the current time is later than the closing time
-    - sends the channel's remaining funds to msg.sender, and sets the balance to 0
-    - emits the Closed event
-    */
+    // create a public defundChannel() function that:
+    function defundChannel() public {
+    // - checks that msg.sender has a closing channel
+    require(canCloseAt[msg.sender] != 0, "You cannot defund this channel right now!");
+    // - checks that the current time is later than the closing time
+    require(canCloseAt[msg.sender] < block.timestamp, "You cannot defund this channel right now!");
+    // - sends the channel's remaining funds to msg.sender, and sets the balance to 0
+    (bool sent,) = msg.sender.call{value: balances[msg.sender]}("");
+    require(sent, "The eth txn failed!");
+    balances[msg.sender] = 0;
+    // - emits the Closed event
+    emit Closed(msg.sender);
+    }
 
     struct Voucher {
         uint256 updatedBalance;

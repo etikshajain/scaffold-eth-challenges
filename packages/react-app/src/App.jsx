@@ -863,7 +863,7 @@ function App(props) {
                         </Card>
                       </Col>
 
-                      {/* Checkpoint 6: challenge & closure
+                      {/* Checkpoint 6: challenge & closure */}
 
                       <Col span={5}>
                         <Button
@@ -897,7 +897,7 @@ function App(props) {
                         >
                           Close and withdraw funds
                         </Button>
-                      </Col> */}
+                      </Col>
                     </Row>
                   </div>
                 ) : hasClosedChannel() ? (
