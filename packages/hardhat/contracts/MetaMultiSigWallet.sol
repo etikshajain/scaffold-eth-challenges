@@ -1,12 +1,5 @@
 // SPDX-License-Identifier: MIT
 
-//  Off-chain signature gathering multisig that streams funds - @austingriffith
-//
-// started from 🏗 scaffold-eth - meta-multi-sig-wallet example https://github.com/austintgriffith/scaffold-eth/tree/meta-multi-sig
-//    (off-chain signature based multi-sig)
-//  added a very simple streaming mechanism where `onlySelf` can open a withdraw-based stream
-//
-
 pragma solidity >=0.8.0 <0.9.0;
 // Not needed to be explicitly imported in Solidity 0.8.x
 // pragma experimental ABIEncoderV2;
@@ -20,13 +13,13 @@ contract MetaMultiSigWallet {
     event ExecuteTransaction(address indexed owner, address payable to, uint256 value, bytes data, uint256 nonce, bytes32 hash, bytes result);
     event Owner(address indexed owner, bool added);
     mapping(address => bool) public isOwner;
-    uint public signaturesRequired;
+    uint public requiredSignatures;
     uint public nonce;
     uint public chainId;
 
-    constructor(uint256 _chainId, address[] memory _owners, uint _signaturesRequired) {
-        require(_signaturesRequired > 0, "constructor: must be non-zero sigs required");
-        signaturesRequired = _signaturesRequired;
+    constructor(uint256 _chainId, address[] memory _owners, uint _requiredSignatures) {
+        require(_requiredSignatures > 0, "constructor: must be non-zero sigs required");
+        requiredSignatures = _requiredSignatures;
         for (uint i = 0; i < _owners.length; i++) {
             address owner = _owners[i];
             require(owner != address(0), "constructor: zero address");
@@ -42,26 +35,26 @@ contract MetaMultiSigWallet {
         _;
     }
 
-    function addSigner(address newSigner, uint256 newSignaturesRequired) public onlySelf {
+    function addSigner(address newSigner, uint256 newrequiredSignatures) public onlySelf {
         require(newSigner != address(0), "addSigner: zero address");
         require(!isOwner[newSigner], "addSigner: owner not unique");
-        require(newSignaturesRequired > 0, "addSigner: must be non-zero sigs required");
+        require(newrequiredSignatures > 0, "addSigner: must be non-zero sigs required");
         isOwner[newSigner] = true;
-        signaturesRequired = newSignaturesRequired;
+        requiredSignatures = newrequiredSignatures;
         emit Owner(newSigner, isOwner[newSigner]);
     }
 
-    function removeSigner(address oldSigner, uint256 newSignaturesRequired) public onlySelf {
+    function removeSigner(address oldSigner, uint256 newrequiredSignatures) public onlySelf {
         require(isOwner[oldSigner], "removeSigner: not owner");
-        require(newSignaturesRequired > 0, "removeSigner: must be non-zero sigs required");
+        require(newrequiredSignatures > 0, "removeSigner: must be non-zero sigs required");
         isOwner[oldSigner] = false;
-        signaturesRequired = newSignaturesRequired;
+        requiredSignatures = newrequiredSignatures;
         emit Owner(oldSigner, isOwner[oldSigner]);
     }
 
-    function updateSignaturesRequired(uint256 newSignaturesRequired) public onlySelf {
-        require(newSignaturesRequired > 0, "updateSignaturesRequired: must be non-zero sigs required");
-        signaturesRequired = newSignaturesRequired;
+    function updaterequiredSignatures(uint256 newrequiredSignatures) public onlySelf {
+        require(newrequiredSignatures > 0, "updaterequiredSignatures: must be non-zero sigs required");
+        requiredSignatures = newrequiredSignatures;
     }
 
     function getTransactionHash(uint256 _nonce, address to, uint256 value, bytes memory data) public view returns (bytes32) {
@@ -86,7 +79,7 @@ contract MetaMultiSigWallet {
             }
         }
 
-        require(validSignatures>=signaturesRequired, "executeTransaction: not enough valid signatures");
+        require(validSignatures>=requiredSignatures, "executeTransaction: not enough valid signatures");
 
         (bool success, bytes memory result) = to.call{value: value}(data);
         require(success, "executeTransaction: tx failed");
